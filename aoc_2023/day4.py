@@ -18,6 +18,9 @@ class Card:
     numbers: set[int]
     winners: set[int]
 
+    def n_winners(self) -> int:
+        return len(self.numbers.intersection(self.winners))
+
     def score(self) -> int:
         """
         >>> Card(numbers={12, 13}, winners={24, 25}).score()
@@ -29,8 +32,8 @@ class Card:
         >>> Card(numbers={1, 2, 3}, winners={1, 2, 3, 4}).score()
         4
         """
-        hits = self.numbers.intersection(self.winners)
-        return 2 ** (len(hits) - 1) if hits else 0
+        n_winners = self.n_winners()
+        return 2 ** (n_winners - 1) if n_winners else 0
 
     @classmethod
     def from_line(cls, line: str) -> Self:
@@ -49,12 +52,22 @@ class Card:
 def solution(lines: list[str]) -> tuple[int, int]:
     """
     >>> solution(EXAMPLE)
-    (13, 0)
+    (13, 30)
     """
-    part1, part2 = 0, 0
+    part1 = 0
 
+    cards: list[Card] = []
     for card in (Card.from_line(line) for line in lines):
         part1 += card.score()
+        cards.append(card)
+
+    counts = [1 for _ in range(len(cards))]
+
+    for i in range(len(cards)):
+        for j in range(i + 1, i + 1 + cards[i].n_winners()):
+            counts[j] += counts[i]
+
+    part2 = sum(counts)
 
     return (part1, part2)
 
@@ -66,4 +79,6 @@ if __name__ == "__main__":
 
     lines = Path("inputs/day4.txt").read_text().strip().split("\n")
 
-    print(solution(lines))
+    part1, part2 = solution(lines)
+    assert part1 == 28538
+    assert part2 == 9425061
